@@ -1,14 +1,39 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
+
+// Resilient better-sqlite3 import
+let Database: any;
+try {
+  const { default: DB } = await import("better-sqlite3");
+  Database = DB;
+} catch (e) {
+  console.error("Failed to load better-sqlite3, using in-memory mock:", e);
+  Database = class MockDatabase {
+    constructor() {}
+    exec() {}
+    prepare() {
+      return {
+        all: () => [],
+        run: () => ({ lastInsertRowid: 0, changes: 0 }),
+        get: () => null
+      };
+    }
+  };
+}
 
 // Vercel specific: Use /tmp for SQLite if running in serverless environment
 // Note: This is ephemeral and will reset on every cold start.
 // For production, use a hosted database like Vercel Postgres or Supabase.
-const dbPath = process.env.VERCEL ? "/tmp/suzanne.db" : "suzanne.db";
-const db = new Database(dbPath);
+let db: any;
+try {
+  const dbPath = process.env.VERCEL ? "/tmp/suzanne.db" : "suzanne.db";
+  db = new Database(dbPath);
+} catch (e) {
+  console.error("Failed to initialize file-based database, falling back to in-memory:", e);
+  db = new Database(":memory:");
+}
 
 // Initialize database
 db.exec(`
@@ -80,17 +105,21 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static(path.join(process.cwd(), "dist")));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(process.cwd(), "dist", "index.html"));
-    });
+    // In production or on Vercel, serve static files from dist
+    const distPath = path.join(process.cwd(), "dist");
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+    }
   }
 
   if (!process.env.VERCEL) {
