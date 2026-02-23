@@ -1,0 +1,5 @@
+{
+  "name": "Suzanne AI Assistant",
+  "description": "A Gen Z personal AI assistant named Suzanne, specialized in IIT JEE prep and personal mentorship with voice call capabilities.",
+  "requestFramePermissions": ["microphone"]
+}
