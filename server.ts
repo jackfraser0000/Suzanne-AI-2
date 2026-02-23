@@ -4,7 +4,11 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
-const db = new Database("suzanne.db");
+// Vercel specific: Use /tmp for SQLite if running in serverless environment
+// Note: This is ephemeral and will reset on every cold start.
+// For production, use a hosted database like Vercel Postgres or Supabase.
+const dbPath = process.env.VERCEL ? "/tmp/suzanne.db" : "suzanne.db";
+const db = new Database(dbPath);
 
 // Initialize database
 db.exec(`
@@ -29,8 +33,9 @@ db.exec(`
   );
 `);
 
+const app = express();
+
 async function startServer() {
-  const app = express();
   const PORT = 3000;
 
   app.use(express.json({ limit: '50mb' }));
@@ -88,9 +93,13 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 startServer();
+
+export default app;

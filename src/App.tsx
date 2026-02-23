@@ -272,7 +272,20 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen fluid-bg font-sans overflow-hidden">
+    <div className="flex h-screen fluid-bg font-sans overflow-hidden relative">
+      {/* Sidebar Overlay for Mobile */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -280,14 +293,23 @@ export default function App() {
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             exit={{ x: -300 }}
-            className="w-72 bg-stormy-deep/80 backdrop-blur-xl border-r border-white/10 flex flex-col z-20"
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed md:relative w-72 h-full bg-stormy-deep/95 md:bg-stormy-deep/80 backdrop-blur-xl border-r border-white/10 flex flex-col z-40 md:z-20"
           >
             <div className="p-6">
-              <h1 className="text-2xl font-bold text-stormy-light mb-6 flex items-center gap-2">
-                <SuzanneLogo className="w-12 h-12" /> Suzanne
-              </h1>
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-stormy-light flex items-center gap-2">
+                  <SuzanneLogo className="w-12 h-12" /> Suzanne
+                </h1>
+                <button 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg md:hidden"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
               <button 
-                onClick={startNewSession}
+                onClick={() => { startNewSession(); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
                 className="w-full py-3 px-4 bg-stormy-accent hover:bg-stormy-main transition-colors rounded-xl flex items-center justify-center gap-2 font-medium shadow-lg"
               >
                 <Plus className="w-5 h-5" /> New Session
@@ -301,7 +323,7 @@ export default function App() {
               {sessions.map((s) => (
                 <div 
                   key={s.id}
-                  onClick={() => setCurrentSession(s)}
+                  onClick={() => { setCurrentSession(s); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
                   className={`group relative p-3 rounded-xl cursor-pointer transition-all ${
                     currentSession?.id === s.id ? 'bg-white/20 shadow-inner' : 'hover:bg-white/10'
                   }`}
@@ -324,28 +346,28 @@ export default function App() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative">
         {/* Header */}
-        <header className="h-20 bg-white/5 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-8 z-10">
-          <div className="flex items-center gap-4">
+        <header className="h-16 md:h-20 bg-white/5 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 md:px-8 z-10">
+          <div className="flex items-center gap-2 md:gap-4">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-1 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <SuzanneLogo className="w-12 h-12" />
+              <SuzanneLogo className="w-10 h-10 md:w-12 md:h-12" />
             </button>
-            <div>
-              <h2 className="font-bold text-lg">Suzanne</h2>
-              <p className="text-xs text-green-400 flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" /> Online
+            <div className="hidden sm:block">
+              <h2 className="font-bold text-base md:text-lg">Suzanne</h2>
+              <p className="text-[10px] md:text-xs text-green-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-400 rounded-full animate-pulse" /> Online
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex bg-white/10 rounded-full p-1 border border-white/10 mr-2">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex bg-white/10 rounded-full p-0.5 md:p-1 border border-white/10">
               {(['Easy', 'Medium', 'Hard'] as const).map((level) => (
                 <button
                   key={level}
                   onClick={() => setDifficulty(level)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold transition-all ${
                     difficulty === level 
                       ? 'bg-stormy-accent text-white shadow-md' 
                       : 'text-white/60 hover:text-white'
@@ -357,12 +379,12 @@ export default function App() {
             </div>
             <button 
               onClick={toggleVoiceCall}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+              className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full transition-all ${
                 isCalling ? 'bg-red-500 animate-pulse' : 'bg-stormy-accent hover:bg-stormy-main'
               }`}
             >
-              <Phone className="w-5 h-5" />
-              <span className="font-medium">{isCalling ? 'End Call' : 'Voice Call'}</span>
+              <Phone className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="font-medium text-xs md:text-sm">{isCalling ? 'End' : 'Call'}</span>
             </button>
           </div>
         </header>
@@ -370,7 +392,7 @@ export default function App() {
         {/* Chat Area */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide"
+          className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6 scrollbar-hide"
         >
           {messages.length === 0 && !currentSession && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-60">
@@ -388,19 +410,19 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-[80%] flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+              <div className={`max-w-[90%] md:max-w-[80%] flex gap-2 md:gap-3 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                   m.role === 'user' ? 'bg-stormy-accent' : 'bg-white/20'
                 }`}>
-                  {m.role === 'user' ? <User className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
+                  {m.role === 'user' ? <User className="w-5 h-5 md:w-6 md:h-6" /> : <SuzanneLogo className="w-6 h-6 md:w-8 md:h-8" />}
                 </div>
-                <div className={`p-4 glass-card ${
+                <div className={`p-3 md:p-4 glass-card ${
                   m.role === 'user' ? 'bg-stormy-main/40' : 'bg-white/5'
                 }`}>
                   {m.type === 'image' && (
-                    <img src={m.content} className="max-w-xs rounded-lg mb-2 border border-white/20" />
+                    <img src={m.content} className="max-w-full sm:max-w-xs rounded-lg mb-2 border border-white/20" />
                   )}
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  <p className="text-xs md:text-sm leading-relaxed whitespace-pre-wrap">
                     {m.type === 'text' ? m.content : (m.content.startsWith('data:') ? 'Problem Image' : m.content)}
                   </p>
                 </div>
@@ -423,38 +445,38 @@ export default function App() {
         </div>
 
         {/* Input Area */}
-        <div className="p-6 bg-gradient-to-t from-stormy-deep to-transparent">
+        <div className="p-3 md:p-6 bg-gradient-to-t from-stormy-deep to-transparent">
           <div className="max-w-4xl mx-auto">
             {attachedImage && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 relative inline-block"
+                className="mb-2 md:mb-4 relative inline-block"
               >
-                <img src={attachedImage} className="h-24 rounded-xl border-2 border-stormy-accent" />
+                <img src={attachedImage} className="h-16 md:h-24 rounded-xl border-2 border-stormy-accent" />
                 <button 
                   onClick={() => setAttachedImage(null)}
                   className="absolute -top-2 -right-2 bg-red-500 p-1 rounded-full text-white shadow-lg"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
               </motion.div>
             )}
-            <div className="relative flex items-center gap-3">
+            <div className="relative flex items-center gap-2 md:gap-3">
               <div className="flex-1 relative">
                 <input 
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ask Suzanne anything..."
-                  className="w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-stormy-accent transition-all placeholder:text-white/30"
+                  placeholder="Ask Suzanne..."
+                  className="w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-2xl py-3 md:py-4 pl-10 md:pl-12 pr-4 focus:outline-none focus:border-stormy-accent transition-all placeholder:text-white/30 text-sm md:text-base"
                 />
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-stormy-light transition-colors"
+                  className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-stormy-light transition-colors"
                 >
-                  <Paperclip className="w-5 h-5" />
+                  <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <input 
                   type="file"
@@ -466,18 +488,18 @@ export default function App() {
               </div>
               <button 
                 onClick={() => setIsVoiceInput(!isVoiceInput)}
-                className={`p-4 rounded-2xl transition-all ${
+                className={`p-3 md:p-4 rounded-xl md:rounded-2xl transition-all ${
                   isVoiceInput ? 'bg-red-500' : 'bg-white/10 hover:bg-white/20'
                 }`}
               >
-                <Mic className="w-6 h-6" />
+                <Mic className="w-5 h-5 md:w-6 md:h-6" />
               </button>
               <button 
                 onClick={handleSendMessage}
                 disabled={isLoading || (!input.trim() && !attachedImage)}
-                className="p-4 bg-stormy-accent hover:bg-stormy-main disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-all shadow-lg"
+                className="p-3 md:p-4 bg-stormy-accent hover:bg-stormy-main disabled:opacity-50 disabled:cursor-not-allowed rounded-xl md:rounded-2xl transition-all shadow-lg"
               >
-                <Send className="w-6 h-6" />
+                <Send className="w-5 h-5 md:w-6 md:h-6" />
               </button>
             </div>
           </div>

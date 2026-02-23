@@ -70,6 +70,12 @@ export class SuzanneVoiceClient {
   private async startMic() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     this.audioContext = new AudioContext({ sampleRate: 16000 });
+    
+    // Handle mobile suspension
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
+
     this.source = this.audioContext.createMediaStreamSource(stream);
     this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
 
