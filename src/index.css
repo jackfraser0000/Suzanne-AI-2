@@ -12,6 +12,10 @@
 @layer base {
   body {
     @apply bg-stormy-deep text-white antialiased;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }
 
@@ -39,7 +43,15 @@
 }
 
 .glass-card {
-  @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl;
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl;
+}
+
+.user-bubble {
+  @apply bg-stormy-accent/30 border-stormy-accent/20 rounded-tr-none;
+}
+
+.model-bubble {
+  @apply bg-white/5 border-white/10 rounded-tl-none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
